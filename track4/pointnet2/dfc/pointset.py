@@ -15,6 +15,16 @@ from laspy.file import File as LasFile
 from laspy.header import Header as LasHeader
 from pathlib import Path
 
+# pdal binary settings
+pdal_bin = ''
+pdal_paths = ['pdal', '/opt/conda/envs/cpdal-run/bin/pdal']
+for pdal_path in pdal_paths:
+    if subprocess.call(pdal_path, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True) == 0:
+        pdal_bin = pdal_path
+        break
+if not pdal_bin:
+    raise ValueError('Can\'t find pdal binary')
+
 # Point set (point cloud) class definition
 class PointSet(object):
     def __init__(self, points_file, class_file=''):
@@ -119,7 +129,7 @@ class PointSet(object):
                                     {'type':'filters.chipper','capacity':str(points_per_chip)},
                                     opath]}
                         
-                        p = subprocess.run(['/opt/conda/envs/cpdal-run/bin/pdal','pipeline','-s'],input=json.dumps(pipeline).encode())
+                        p = subprocess.run([pdal_bin,'pipeline','-s'],input=json.dumps(pipeline).encode())
                         if p.returncode:
                             raise ValueError('Failed to run pipeline: \n"'+json.dumps(pipeline)+'"')
                         
@@ -130,7 +140,7 @@ class PointSet(object):
                         {'type':'filters.voxelcentroidnearestneighbor'},
                         {'type':'filters.chipper','capacity':'65536'},
                         opath]}
-                p = subprocess.run(['/opt/conda/envs/cpdal-run/bin/pdal','pipeline','-s'],input=json.dumps(pipeline).encode())
+                p = subprocess.run([pdal_bin,'pipeline','-s'],input=json.dumps(pipeline).encode())
                 if p.returncode:
                     raise ValueError('Failed to run pipeline: \n"'+json.dumps(pipeline)+'"')
                 

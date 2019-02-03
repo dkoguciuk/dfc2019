@@ -29,6 +29,16 @@ import provider
 import tf_util
 import pc_util
 
+# pdal binary settings
+pdal_bin = ''
+pdal_paths = ['pdal', '/opt/conda/envs/cpdal-run/bin/pdal']
+for pdal_path in pdal_paths:
+    if subprocess.call(pdal_path, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True) == 0:
+        pdal_bin = pdal_path
+        break
+if not pdal_bin:
+    raise ValueError('Can\'t find pdal binary')
+
 class InputType(Enum):
     TXT='TXT'
     LAS='LAS'
@@ -307,7 +317,7 @@ def post_processor(output_queue):
                     ipath,
                     {'type':'filters.neighborclassifier','k':FLAGS.n_angles*4+1,'candidate':cpath}, # Note: number of votes is FLAGS.n_angles*4+1, where 4 comes from splitting the point cloud (nominal number of overlapping subtiles per point before rotations)
                     opath]}
-            p = subprocess.run(['/opt/conda/envs/cpdal-run/bin/pdal','pipeline','-s'],input=json.dumps(pipeline).encode())
+            p = subprocess.run([pdal_bin,'pipeline','-s'],input=json.dumps(pipeline).encode())
             if p.returncode:
                 raise ValueError('Failed to run pipeline: \n"'+json.dumps(pipeline)+'"')
             
